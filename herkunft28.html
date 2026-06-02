@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Das Wort пара</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+            --success-color: #38a169;
+            --success-bg: #f0fff4;
+            --error-color: #e53e3e;
+            --error-bg: #fff5f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 33.33%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .question-box {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ebf8ff;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            list-style: none;
+        }
+
+        .option-button {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            text-align: left;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        @media (hover: hover) {
+            .option-button:hover:not(:disabled) {
+                border-color: var(--primary-color);
+                background-color: #f7fafc;
+                transform: translateY(-1px);
+            }
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+        }
+
+        .option-button.correct {
+            border-color: var(--success-color);
+            background-color: var(--success-bg);
+            color: #22543d;
+            font-weight: 600;
+        }
+
+        .option-button.wrong {
+            border-color: var(--error-color);
+            background-color: var(--error-bg);
+            color: #742a2a;
+        }
+
+        .option-button.neutral-disabled {
+            opacity: 0.5;
+        }
+
+        .feedback-container {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .feedback-container.correct-style {
+            display: block;
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-color);
+        }
+
+        .feedback-container.wrong-style {
+            display: block;
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .feedback-title.correct-text { color: var(--success-color); }
+        .feedback-title.wrong-text { color: var(--error-color); }
+
+        .action-btn {
+            display: block;
+            margin: 25px auto 0 auto;
+            padding: 12px 28px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 1.3rem; }
+            .question-box { font-size: 1.05rem; }
+            .option-button { padding: 14px 16px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    
+    <h1 id="quiz-title">Frage 1 von 3</h1>
+    <div class="subtitle" id="quiz-subtitle">Kultur & Herkunft</div>
+
+    <div class="question-box" id="question-text">
+        Warum heißt eine Vorlesung an einer russischen Universität пара?
+    </div>
+
+    <div id="options-container">
+        </div>
+
+    <div class="feedback-container" id="feedback-box">
+        <div class="feedback-title" id="feedback-title"></div>
+        <div class="feedback-text" id="feedback-text"></div>
+    </div>
+
+    <button class="action-btn" id="action-button" onclick="handleActionClick()"></button>
+</div>
+
+<script>
+    const questions = [
+        {
+            subtitle: "Kultur & Herkunft",
+            question: "Warum heißt eine Vorlesung an einer russischen Universität пара?",
+            options: [
+                { text: "Weil immer zwei Professoren im Hörsaal stehen.", correct: false },
+                { text: "Weil sie aus zwei akademischen Stunden (90 Minuten) besteht.", correct: true },
+                { text: "Weil man an Universitäten nur zu zweit lernen darf.", correct: false }
+            ],
+            feedbackCorrect: "Правильно! Das Wort пара bedeutet übersetzt Paar. Da eine Lehrveranstaltung an russischen Universitäten traditionell aus einem Paar von akademischen Stunden (2 × 45 Minuten = 90 Minuten) besteht, nennt man sie ganz einfach so.",
+            feedbackWrong: "Denke an die zeitliche Bedeutung des Wortes. Eine Unterrichtseinheit bündelt zwei klassische Schulstunden."
+        },
+        {
+            subtitle: "Bedeutung im Kontext",
+            question: "Ein russischer Student sagt erleichtert: „Завтра у меня не будет пар“. Was meint er damit?",
+            options: [
+                { text: "Er muss morgen ein neues Paar Schuhe für den Sportunterricht kaufen.", correct: false },
+                { text: "Er hat morgen fünf Prüfungen hintereinander.", correct: false },
+                { text: "Er hat morgen keine Vorlesungen und somit einen freien Tag.", correct: true }
+            ],
+            feedbackCorrect: "Отлично! Wenn keine Vorlesungen (пар) stattfinden, hat der Student vorlesungsfrei und kann ausschlafen.",
+            feedbackWrong: "Schau dir den Satz genau an: „не будет“ bedeutet „wird es nicht geben“. Was hat er morgen also nicht?"
+        },
+        {
+            subtitle: "Grammatik & Mengenangaben",
+            question: "Wie drückt man aus, dass man an einem Tag einen vollen Stundenplan mit insgesamt 5 Doppelstunden hat?",
+            options: [
+                { text: "Сегодня у uns будет пять пар.", correct: true },
+                { text: "Сегодня у uns будет пять пара.", correct: false },
+                { text: "Сегодня у uns будет пять пары.", correct: false }
+            ],
+            feedbackCorrect: "Ура! Nach dem Zahlwort fünf (пять) benötigt man im Russischen den Genitiv Plural. Die richtige Form lautet hier пар.",
+            feedbackWrong: "Achtung bei den Endungen nach Zahlen! Nach der Zahl fünf brauchst du im Russischen den Genitiv Plural."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let hasAnswered = false;
+
+    function loadQuestion() {
+        hasAnswered = false;
+        const q = questions[currentQuestionIndex];
+        
+        // UI Aktualisierung
+        document.getElementById("quiz-title").textContent = `Frage ${currentQuestionIndex + 1} von ${questions.length}`;
+        document.getElementById("quiz-subtitle").textContent = q.subtitle;
+        document.getElementById("question-text").textContent = q.question;
+        document.getElementById("progress").style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+        
+        const feedbackBox = document.getElementById("feedback-box");
+        feedbackBox.style.display = "none";
+        document.getElementById("action-button").style.display = "none";
+
+        // Optionen aufbauen
+        const container = document.getElementById("options-container");
+        container.innerHTML = '<ul class="options-list"></ul>';
+        const list = container.querySelector('ul');
+
+        q.options.forEach((opt, index) => {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.className = "option-button";
+            btn.textContent = opt.text;
+            btn.onclick = () => selectOption(index);
+            li.appendChild(btn);
+            list.appendChild(li);
+        });
+    }
+
+    function selectOption(selectedIndex) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const q = questions[currentQuestionIndex];
+        const buttons = document.querySelectorAll('.option-button');
+        const isCorrect = q.options[selectedIndex].correct;
+
+        buttons.forEach((btn, idx) => {
+            btn.disabled = true;
+            if (q.options[idx].correct) {
+                btn.classList.add('correct');
+            } else if (idx === selectedIndex) {
+                btn.classList.add('wrong');
+            } else {
+                btn.classList.add('neutral-disabled');
+            }
+        });
+
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const actionBtn = document.getElementById('action-button');
+
+        if (isCorrect) {
+            feedbackBox.className = "feedback-container correct-style";
+            feedbackTitle.textContent = "Правильно! (Richtig!)";
+            feedbackTitle.className = "feedback-title correct-text";
+            feedbackText.textContent = q.feedbackCorrect;
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                actionBtn.textContent = "Nächste Frage";
+            } else {
+                actionBtn.textContent = "Quiz abschließen";
+            }
+            actionBtn.style.display = "block";
+        } else {
+            feedbackBox.className = "feedback-container wrong-style";
+            feedbackTitle.textContent = "Неправильно. (Leider falsch.)";
+            feedbackTitle.className = "feedback-title wrong-text";
+            feedbackText.textContent = q.feedbackWrong;
+            
+            actionBtn.textContent = "Nochmal versuchen";
+            actionBtn.style.display = "block";
+        }
+    }
+
+    function handleActionClick() {
+        const actionBtn = document.getElementById('action-button');
+        const actionText = actionBtn.textContent;
+        
+        if (actionText === "Nochmal versuchen") {
+            loadQuestion();
+        } else if (actionText === "Nächste Frage") {
+            currentQuestionIndex++;
+            loadQuestion();
+        } else if (actionText === "Quiz abschließen") {
+            // Endbildschirm anzeigen
+            document.getElementById("progress").style.width = "100%";
+            document.getElementById("quiz-title").textContent = "Quiz beendet!";
+            document.getElementById("quiz-subtitle").textContent = "Ergebnis";
+            document.getElementById("question-text").textContent = "Поздравляю! (Glückwunsch!) Du hast alle Aufgaben zum Thema пара gemeistert.";
+            document.getElementById("options-container").innerHTML = "";
+            document.getElementById("feedback-box").style.display = "none";
+            
+            actionBtn.textContent = "Quiz neustarten";
+            actionBtn.style.display = "block";
+        } else if (actionText === "Quiz neustarten") {
+            // Index zurücksetzen und von vorne beginnen
+            currentQuestionIndex = 0;
+            loadQuestion();
+        }
+    }
+
+    window.onload = loadQuestion;
+</script>
+
+</body>
+</html>
