@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Richtig oder Falsch?</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+            --success-bg: #f0fff4;
+            --error-color: #e53e3e;
+            --error-bg: #fff5f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 25%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .statement-card {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            font-size: 1.15rem;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .russian-quote {
+            display: block;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin: 8px 0;
+            font-style: italic;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .decision-btn {
+            flex: 1;
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .decision-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-true {
+            background-color: var(--success-color);
+        }
+        .btn-true:hover {
+            background-color: #2f855a;
+        }
+
+        .btn-false {
+            background-color: var(--error-color);
+        }
+        .btn-false:hover {
+            background-color: #c53030;
+        }
+
+        .decision-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback-box {
+            display: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-correct {
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-color);
+            color: #22543d;
+        }
+
+        .feedback-wrong {
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+            color: #742a2a;
+        }
+
+        .action-btn {
+            display: none;
+            margin: 25px auto 0 auto;
+            padding: 12px 30px;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 1.3rem; }
+            .statement-card { padding: 15px; font-size: 1rem; }
+            .russian-quote { font-size: 1.1rem; }
+            .btn-group { flex-direction: column; gap: 10px; }
+            .decision-btn { width: 100%; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    
+    <h1 id="quiz-title">Richtig oder Falsch? (Frage 1 von 4)</h1>
+    <div class="subtitle">Prüfe dein Leseverstehen</div>
+
+    <div class="statement-card" id="statement-text">
+        <!-- Wird per JS befüllt -->
+    </div>
+
+    <div class="btn-group">
+        <button class="decision-btn btn-true" id="btn-true" onclick="handleAnswer(true)">RICHTIG</button>
+        <button class="decision-btn btn-false" id="btn-false" onclick="handleAnswer(false)">FALSCH</button>
+    </div>
+
+    <div class="feedback-box" id="feedback-box"></div>
+
+    <button class="action-btn" id="action-button" onclick="handleActionClick()"></button>
+</div>
+
+<script>
+    const questions = [
+        {
+            statement: 'Wenn ein Student sagt: <span class="russian-quote">„Завтра у меня не будет пар“</span>, muss er morgen früh aufstehen.',
+            isTrue: false,
+            explanation: '<strong>Falsch!</strong> „Не будет пар“ bedeutet, dass er morgen <em>keine</em> Vorlesungen/Doppelstunden hat. Er hat also vorlesungsfrei und kann ausschlafen.'
+        },
+        {
+            statement: 'Das Wort <span class="russian-quote">„пара“</span> bedeutet im universitären Kontext eine Unterrichtseinheit von zwei Schulstunden (90 Minuten).',
+            isTrue: true,
+            explanation: '<strong>Richtig!</strong> Das Wort leitet sich vom deutschen Wort „Paar“ ab, da es sich um ein Paar aus zwei Unterrichtsstunden (Doppelstunde) handelt.'
+        },
+        {
+            statement: 'Der Satz <span class="russian-quote">„Сегодня у нас будет пять пар“</span> bedeutet, dass die Studierenden heute sehr früh nach Hause gehen können.',
+            isTrue: false,
+            explanation: '<strong>Falsch!</strong> Fünf „Paare“ bedeuten 5 x 90 Minuten reine Unterrichtszeit (zzgl. Pausen). Das ist ein sehr langer und anstrengender Unitag!'
+        },
+        {
+            statement: 'Im russischen Satz <span class="russian-quote">„у меня не будет пар“</span> steht das Wort „пар“ im Genitiv Plural.',
+            isTrue: true,
+            explanation: '<strong>Richtig!</strong> Nach einer Verneinung mit „не будет“ (wird es nicht geben) folgt im Russischen automatisch der Genitiv Plural, wenn es um zählbare Dinge im Plural geht.'
+        }
+    ];
+
+    let currentIndex = 0;
+
+    function loadQuestion() {
+        const currentQuestion = questions[currentIndex];
+
+        // UI zurücksetzen und aktualisieren
+        document.getElementById("quiz-title").textContent = `Richtig oder Falsch? (Frage ${currentIndex + 1} von ${questions.length})`;
+        document.getElementById("statement-text").innerHTML = currentQuestion.statement;
+        document.getElementById("progress").style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+        
+        document.getElementById("feedback-box").style.display = "none";
+        document.getElementById("action-button").style.display = "none";
+        
+        // Buttons wieder aktivieren
+        document.getElementById("btn-true").disabled = false;
+        document.getElementById("btn-false").disabled = false;
+    }
+
+    function handleAnswer(userChoice) {
+        const currentQuestion = questions[currentIndex];
+        const feedbackBox = document.getElementById("feedback-box");
+        
+        // Buttons sperren nach der Auswahl
+        document.getElementById("btn-true").disabled = true;
+        document.getElementById("btn-false").disabled = true;
+
+        // Direktes Feedback auswerten
+        if (userChoice === currentQuestion.isTrue) {
+            feedbackBox.className = "feedback-box feedback-correct";
+            feedbackBox.innerHTML = `🎉 <strong>Stimmt genau!</strong><br>${currentQuestion.explanation}`;
+        } else {
+            feedbackBox.className = "feedback-box feedback-wrong";
+            feedbackBox.innerHTML = `❌ <strong>Knapp daneben!</strong><br>${currentQuestion.explanation}`;
+        }
+        feedbackBox.style.display = "block";
+
+        // Aktions-Button für den nächsten Schritt einblenden
+        const actionBtn = document.getElementById("action-button");
+        if (currentIndex < questions.length - 1) {
+            actionBtn.textContent = "Nächste Frage";
+        } else {
+            actionBtn.textContent = "Quiz abschließen";
+        }
+        actionBtn.style.display = "block";
+    }
+
+    function handleActionClick() {
+        const actionBtn = document.getElementById("action-button");
+        const mode = actionBtn.textContent;
+
+        if (mode === "Nächste Frage") {
+            currentIndex++;
+            loadQuestion();
+        } else if (mode === "Quiz abschließen") {
+            // Endscreen anzeigen
+            document.getElementById("progress").style.width = "100%";
+            document.getElementById("quiz-title").textContent = "Quiz beendet!";
+            document.getElementById("statement-text").innerHTML = "Hervorragend! Du hast alle Aussagen zum Text erfolgreich analysiert und dein Leseverstehen unter Beweis gestellt. Das Konzept rund um das Wort <strong>пара</strong> sitzt!";
+            
+            document.getElementById("btn-true").style.display = "none";
+            document.getElementById("btn-false").style.display = "none";
+            document.getElementById("feedback-box").style.display = "none";
+            
+            actionBtn.textContent = "Quiz neustarten";
+            actionBtn.style.display = "block";
+        } else if (mode === "Quiz neustarten") {
+            // Kompletter Reset auf Frage 1
+            currentIndex = 0;
+            document.getElementById("btn-true").style.display = "inline-block";
+            document.getElementById("btn-false").style.display = "inline-block";
+            loadQuestion();
+        }
+    }
+
+    // Start beim Laden der Seite
+    window.onload = loadQuestion;
+</script>
+
+</body>
+</html>
