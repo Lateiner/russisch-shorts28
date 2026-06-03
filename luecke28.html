@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Lückentext</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+            --success-bg: #f0fff4;
+            --error-color: #e53e3e;
+            --error-bg: #fff5f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .instruction {
+            font-size: 1.05rem;
+            margin-bottom: 25px;
+            background-color: #ebf8ff;
+            padding: 15px;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        /* Text- und Lückendesign */
+        .text-passage {
+            font-size: 1.25rem;
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+
+        .sentence-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .sentence-item:last-child {
+            border-bottom: none;
+        }
+
+        .translation-hint {
+            display: block;
+            font-size: 0.95rem;
+            color: #718096;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* Dropdown Stylings */
+        .inline-select {
+            font-size: 1.15rem;
+            font-weight: bold;
+            font-family: inherit;
+            padding: 4px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fff;
+            color: var(--text-color);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+            margin: 0 4px;
+            vertical-align: middle;
+        }
+
+        .inline-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+        }
+
+        /* Feedback-Zustände der Dropdowns */
+        .inline-select.select-correct {
+            border-color: var(--success-color);
+            background-color: var(--success-bg);
+            color: #22543d;
+        }
+
+        .inline-select.select-wrong {
+            border-color: var(--error-color);
+            background-color: var(--error-bg);
+            color: #742a2a;
+        }
+
+        .feedback-summary {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .feedback-summary.all-correct {
+            display: block;
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-color);
+            color: #22543d;
+        }
+
+        .feedback-summary.has-errors {
+            display: block;
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+            color: #742a2a;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .action-btn {
+            padding: 12px 30px;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 1.3rem; }
+            .text-passage { font-size: 1.1rem; line-height: 2; }
+            .inline-select { font-size: 1rem; padding: 2px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz-box">
+    <h1>Grammatik im Kontext</h1>
+    <div class="subtitle">Lückentext mit Dropdown-Auswahl</div>
+
+    <div class="instruction">
+        Wähle für jede Lücke die grammatikalisch richtige Endung des Wortes <strong>пара</strong> aus. Achte auf die Signalwörter vor der Lücke!
+    </div>
+
+    <div class="text-passage" id="text-container">
+        <!-- Satz 1 -->
+        <div class="sentence-item">
+            У этого слова есть несколько 
+            <select class="inline-select" data-answer="значений" onchange="resetValidation(this)">
+                <option value="">...</option>
+                <option value="значение">значение</option>
+                <option value="значения">значения</option>
+                <option value="значений">значений</option>
+            </select>.
+            <span class="translation-hint">Dieses Wort hat mehrere Bedeutungen.</span>
+        </div>
+
+        <!-- Satz 2 -->
+        <div class="sentence-item">
+            Завтра у меня не будет 
+            <select class="inline-select" data-answer="пар" onchange="resetValidation(this)">
+                <option value="">...</option>
+                <option value="пара">пара</option>
+                <option value="пары">пары</option>
+                <option value="пар">пар</option>
+            </select>.
+            <span class="translation-hint">Morgen habe ich keine Vorlesungen (wörtlich: wird es keine Paare geben).</span>
+        </div>
+
+        <!-- Satz 3 -->
+        <div class="sentence-item">
+            Сегодня у нас будет пять 
+            <select class="inline-select" data-answer="пар" onchange="resetValidation(this)">
+                <option value="">...</option>
+                <option value="пара">пара</option>
+                <option value="пары">пары</option>
+                <option value="пар">пар</option>
+            </select>.
+            <span class="translation-hint">Heute werden wir fünf Doppelstunden haben.</span>
+        </div>
+    </div>
+
+    <div class="feedback-summary" id="feedback-summary"></div>
+
+    <div class="btn-container">
+        <button class="action-btn" id="action-button" onclick="validateQuiz()">Eingabe prüfen</button>
+    </div>
+</div>
+
+<script>
+    function resetValidation(selectElement) {
+        // Entfernt die Färbung, sobald der Schüler etwas Neues auswählt
+        selectElement.classList.remove("select-correct", "select-wrong");
+        document.getElementById("feedback-summary").style.display = "none";
+    }
+
+    function validateQuiz() {
+        const selects = document.querySelectorAll(".inline-select");
+        const feedbackSummary = document.getElementById("feedback-summary");
+        const actionBtn = document.getElementById("action-button");
+        
+        let allCorrect = true;
+        let unanswered = false;
+
+        // Zustand des Buttons prüfen (falls bereits bestanden)
+        if (actionBtn.textContent === "Quiz neustarten") {
+            resetWholeQuiz();
+            return;
+        }
+
+        selects.forEach(select => {
+            const selectedValue = select.value;
+            const correctAnswer = select.getAttribute("data-answer");
+
+            if (selectedValue === "") {
+                unanswered = true;
+                allCorrect = false;
+            } else if (selectedValue === correctAnswer) {
+                select.classList.remove("select-wrong");
+                select.classList.add("select-correct");
+            } else {
+                select.classList.remove("select-correct");
+                select.classList.add("select-wrong");
+                allCorrect = false;
+            }
+        });
+
+        // Zusammenfassendes Feedback ausgeben
+        if (unanswered) {
+            feedbackSummary.className = "feedback-summary has-errors";
+            feedbackSummary.textContent = "Bitte fülle zuerst alle Lücken aus!";
+        } else if (allCorrect) {
+            feedbackSummary.className = "feedback-summary all-correct";
+            feedbackSummary.innerHTML = "🎉 <strong>Отлично! (Ausgezeichnet!)</strong><br>Du hast alle Formen richtig zugeordnet! Nach „несколько“ (mehrere), der Verneinung „не будет“ (nicht geben) und Zahlwörtern ab fünf („пять“) verlangt das Russische den Genitiv Plural (пар / значений).";
+            
+            // Ändere den Button für den sauberen Neustart
+            actionBtn.textContent = "Quiz neustarten";
+        } else {
+            feedbackSummary.className = "feedback-summary has-errors";
+            feedbackSummary.textContent = "Einige Antworten sind noch nicht richtig. Überprüfe die rot markierten Lücken!";
+        }
+    }
+
+    function resetWholeQuiz() {
+        const selects = document.querySelectorAll(".inline-select");
+        const feedbackSummary = document.getElementById("feedback-summary");
+        const actionBtn = document.getElementById("action-button");
+
+        // Alle Dropdowns zurücksetzen
+        selects.forEach(select => {
+            select.value = "";
+            select.className = "inline-select";
+        });
+
+        // UI-Elemente aufräumen
+        feedbackSummary.style.display = "none";
+        feedbackSummary.className = "feedback-summary";
+        actionBtn.textContent = "Eingabe prüfen";
+    }
+</script>
+
+</body>
+</html>
