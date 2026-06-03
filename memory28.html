@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Vokabel-Memory</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+            --success-bg: #f0fff4;
+            --memory-blue: #4299e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Memory Grid */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            perspective: 1000px; /* Ermöglicht 3D-Effekt beim Wenden */
+        }
+
+        /* Memory Karten */
+        .memory-card {
+            aspect-ratio: 4 / 3;
+            background-color: var(--memory-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease, opacity 0.8s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            user-select: none;
+        }
+
+        /* Verhinderung von Hover-Effekten auf Mobilgeräten */
+        @media (hover: hover) {
+            .memory-card:hover:not(.flipped):not(.matched) {
+                background-color: var(--primary-hover);
+                transform: scale(1.02);
+            }
+        }
+
+        /* Zustand: Karte umgedreht oder gelöst */
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+            background-color: #fff;
+        }
+
+        .memory-card.matched {
+            transform: rotateY(180deg);
+            opacity: 0; /* Lässt gefundene Paare langsam verschwinden */
+            pointer-events: none;
+        }
+
+        /* Kartenseiten */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .card-front {
+            background-color: inherit;
+            color: white;
+            font-size: 1.8rem;
+        }
+
+        .card-back {
+            background: #fff;
+            color: var(--text-color);
+            border: 2px solid var(--memory-blue);
+            transform: rotateY(180deg);
+        }
+
+        /* Spezifische Schriftgröße für russische Wörter */
+        .card-back.ru {
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        /* Feedback & Button */
+        .feedback-summary {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-color);
+            color: #22543d;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .action-btn {
+            display: block;
+            margin: 20px auto 0 auto;
+            padding: 12px 30px;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive Anpassungen für kleinere Displays */
+        @media (max-width: 520px) {
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3x4 Layout auf Handys */
+                gap: 8px;
+            }
+            .card-face {
+                font-size: 0.8rem;
+                padding: 4px;
+            }
+            .card-back.ru {
+                font-size: 0.85rem;
+            }
+            .card-front {
+                font-size: 1.3rem;
+            }
+            .quiz-container { padding: 15px; }
+            h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Paare aufdecken</h1>
+    <div class="subtitle">Vokabel-Starthilfe</div>
+
+    <div class="memory-grid" id="memory-grid">
+        <!-- 12 Karten werden dynamisch per JavaScript erzeugt -->
+    </div>
+
+    <div class="feedback-summary" id="feedback-summary">
+        🎉 <strong>Великолепно! (Großartig!)</strong><br>Du hast alle Paare erfolgreich aufgedeckt und das Kernvokabular verinnerlicht!
+    </div>
+
+    <button class="action-btn" onclick="resetGame()">Neustart</button>
+</div>
+
+<script>
+    // Die 6 Wortpaare (insgesamt 12 Karten)
+    const pairs = [
+        { id: 1, text: "пара", lang: "ru" },
+        { id: 1, text: "Doppelstunde / Paar", lang: "de" },
+        { id: 2, text: "пять пар", lang: "ru" },
+        { id: 2, text: "fünf Doppelstunden", lang: "de" },
+        { id: 3, text: "занятие", lang: "ru" },
+        { id: 3, text: "Lehrveranstaltung", lang: "de" },
+        { id: 4, text: "университет", lang: "ru" },
+        { id: 4, text: "Universität", lang: "de" },
+        { id: 5, text: "Завтра", lang: "ru" },
+        { id: 5, text: "Morgen", lang: "de" },
+        { id: 6, text: "Сегодня", lang: "ru" },
+        { id: 6, text: "Heute", lang: "de" }
+    ];
+
+    let flippedCards = [];
+    let lockBoard = false;
+    let matchedPairsCount = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function createBoard() {
+        const grid = document.getElementById("memory-grid");
+        grid.innerHTML = "";
+        document.getElementById("feedback-summary").style.display = "none";
+        flippedCards = [];
+        lockBoard = false;
+        matchedPairsCount = 0;
+
+        // Karten mischen
+        const shuffledCards = shuffle([...pairs]);
+
+        shuffledCards.forEach(cardData => {
+            const card = document.createElement("div");
+            card.className = "memory-card";
+            card.dataset.id = cardData.id;
+
+            // Vorderseite (Blaues Cover mit Fragezeichen)
+            const frontFace = document.createElement("div");
+            frontFace.className = "card-face card-front";
+            frontFace.textContent = "❔";
+
+            // Rückseite (Text)
+            const backFace = document.createElement("div");
+            backFace.className = `card-face card-back ${cardData.lang}`;
+            backFace.textContent = cardData.text;
+
+            card.appendChild(frontFace);
+            card.appendChild(backFace);
+            
+            card.onclick = () => flipCard(card);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard(card) {
+        if (lockBoard) return;
+        if (card === flippedCards[0]) return;
+        if (card.classList.contains("matched") || card.classList.contains("flipped")) return;
+
+        card.classList.add("flipped");
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        const isMatch = card1.dataset.id === card2.dataset.id;
+
+        if (isMatch) {
+            disableCards();
+        } else {
+            unflipCards();
+        }
+    }
+
+    function disableCards() {
+        lockBoard = true;
+        matchedPairsCount++;
+
+        // Gefundene Paare nach einer kurzen Drehanimation langsam verschwinden lassen (opacity)
+        setTimeout(() => {
+            flippedCards[0].classList.add("matched");
+            flippedCards[1].classList.add("matched");
+            
+            flippedCards = [];
+            lockBoard = false;
+
+            // Prüfen, ob das Spiel vorbei ist
+            if (matchedPairsCount === pairs.length / 2) {
+                document.getElementById("feedback-summary").style.display = "block";
+            }
+        }, 600);
+    }
+
+    function unflipCards() {
+        lockBoard = true;
+
+        // Wenn es kein Paar war: Kurze Bedenkzeit, dann wieder umdrehen
+        setTimeout(() => {
+            flippedCards[0].classList.remove("flipped");
+            flippedCards[1].classList.remove("flipped");
+
+            flippedCards = [];
+            lockBoard = false;
+        }, 1200);
+    }
+
+    function resetGame() {
+        createBoard();
+    }
+
+    // Beim ersten Laden ausführen
+    window.onload = createBoard;
+</script>
+
+</body>
+</html>
