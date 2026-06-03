@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Satzbaumeister</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+            --success-bg: #f0fff4;
+            --error-color: #e53e3e;
+            --word-bg: #edf2f7;
+            --word-hover: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 20%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .instruction {
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .sentence-display {
+            min-height: 70px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            background-color: #fafafa;
+            margin-bottom: 25px;
+        }
+
+        .words-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 25px;
+            min-height: 60px;
+        }
+
+        .word-box {
+            padding: 12px 20px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            background-color: var(--word-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        @media (hover: hover) {
+            .word-box:hover:not(.used):not(.wrong-flash) {
+                background-color: var(--word-hover);
+                transform: translateY(-1px);
+            }
+        }
+
+        .word-box.used {
+            opacity: 0.2;
+            cursor: not-allowed;
+            background-color: #e2e8f0 !important;
+        }
+
+        .word-box.wrong-flash {
+            background-color: var(--error-color) !important;
+            color: white !important;
+            border-color: #9b2c2c !important;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .word-box.placed {
+            background-color: #ebf8ff;
+            border-color: #bee3f8;
+            cursor: default;
+        }
+
+        .feedback-container {
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.05rem;
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-color);
+            color: #22543d;
+        }
+
+        .action-btn {
+            display: none;
+            margin: 20px auto 0 auto;
+            padding: 12px 28px;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 1.3rem; }
+            .word-box { padding: 10px 14px; font-size: 1rem; }
+            .action-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    
+    <h1 id="quiz-title">Satzbaumeister (Satz 1 von 5)</h1>
+    <div class="subtitle" id="quiz-subtitle">Klicke das jeweils nächste passende Wort an</div>
+
+    <div class="instruction" id="instruction-text"></div>
+
+    <div class="sentence-display" id="sentence-display"></div>
+    <div class="words-pool" id="words-pool"></div>
+
+    <div class="feedback-container" id="feedback-box"></div>
+
+    <button class="action-btn" id="action-button" onclick="handleActionClick()"></button>
+</div>
+
+<script>
+    const rounds = [
+        {
+            instruction: "Satz 1: Begrüße die Zuschauer und frage sie, ob sie wissen, was „пара“ bedeutet.",
+            correctSentence: ["Привет", "знаете", "ли", "вы", "что", "такое", "пара"],
+            poolWords: ["Привет", "знаете", "ли", "вы", "что", "такое", "пара"],
+            translation: "Hallo, wissen Sie, was eine „Para“ ist?"
+        },
+        {
+            instruction: "Satz 2: Erkläre, dass dieses Wort eine Veranstaltung an der Universität beschreibt.",
+            correctSentence: ["пара", "это", "занятие", "в", "университете"],
+            poolWords: ["пара", "это", "занятие", "в", "университете"],
+            translation: "Eine „Para“ – das ist eine Lehrveranstaltung an der Universität."
+        },
+        {
+            instruction: "Satz 3: Bilde das Beispiel: „Morgen habe ich keine Vorlesungen.“",
+            correctSentence: ["Завтра", "у", "меня", "не", "будет", "пар"],
+            poolWords: ["Завтра", "у", "меня", "не", "будет", "пар"], 
+            translation: "Morgen werde ich keine Vorlesungen (Paare) haben."
+        },
+        {
+            instruction: "Satz 4: Bilde das Beispiel: „Heute werden wir fünf Doppelstunden haben.“",
+            correctSentence: ["Сегодня", "у", "нас", "будет", "пять", "пар"],
+            poolWords: ["Сегодня", "у", "нас", "будет", "пять", "пар"],
+            translation: "Heute werden wir fünf Doppelstunden haben."
+        },
+        {
+            instruction: "Satz 5: Fordere die Lerner auf, ihr eigenes Beispiel in die Kommentare zu schreiben.",
+            correctSentence: ["Напишите", "ваш", "пример", "с", "этим", "словом", "в", "комментариях"],
+            poolWords: ["Напишите", "ваш", "пример", "с", "этим", "словом", "в", "комментариях"],
+            translation: "Schreiben Sie Ihr Beispiel mit diesem Wort in die Kommentare!"
+        }
+    ];
+
+    let currentRoundIndex = 0;
+    let currentWordIndex = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadRound() {
+        currentWordIndex = 0;
+        const round = rounds[currentRoundIndex];
+
+        // UI Updates
+        document.getElementById("quiz-title").textContent = `Satzbaumeister (Satz ${currentRoundIndex + 1} von ${rounds.length})`;
+        document.getElementById("quiz-subtitle").textContent = "Klicke das jeweils nächste passende Wort an";
+        document.getElementById("instruction-text").textContent = round.instruction;
+        document.getElementById("progress").style.width = `${((currentRoundIndex + 1) / rounds.length) * 100}%`;
+        
+        document.getElementById("feedback-box").style.display = "none";
+        document.getElementById("action-button").style.display = "none";
+        document.getElementById("sentence-display").innerHTML = "";
+
+        // Wort-Pool mischen und darstellen
+        const poolContainer = document.getElementById("words-pool");
+        poolContainer.style.display = "flex";
+        poolContainer.innerHTML = "";
+        
+        const shuffledWords = shuffle([...round.poolWords]);
+
+        shuffledWords.forEach((word, index) => {
+            const box = document.createElement("div");
+            box.className = "word-box";
+            box.textContent = word;
+            box.dataset.initialIndex = index;
+            box.onclick = () => handleWordSelection(box, word);
+            poolContainer.appendChild(box);
+        });
+    }
+
+    function handleWordSelection(element, clickedWord) {
+        if (element.classList.contains("used") || element.classList.contains("wrong-flash")) return;
+
+        const round = rounds[currentRoundIndex];
+        const expectedWord = round.correctSentence[currentWordIndex];
+
+        if (clickedWord === expectedWord) {
+            // Richtiges Wort angeklickt!
+            element.classList.add("used");
+            
+            // Wort oben einfügen
+            const displayContainer = document.getElementById("sentence-display");
+            const staticBox = document.createElement("div");
+            staticBox.className = "word-box placed";
+            staticBox.textContent = clickedWord;
+            displayContainer.appendChild(staticBox);
+            
+            currentWordIndex++;
+
+            // Prüfen, ob der Satz damit komplett fertig gestellt wurde
+            if (currentWordIndex === round.correctSentence.length) {
+                handleRoundCompletion();
+            }
+        } else {
+            // Falsches Wort angeklickt -> Visuelles Fehler-Feedback per CSS-Animation
+            element.classList.add("wrong-flash");
+            setTimeout(() => {
+                element.classList.remove("wrong-flash");
+            }, 300);
+        }
+    }
+
+    function handleRoundCompletion() {
+        const round = rounds[currentRoundIndex];
+        const feedbackBox = document.getElementById("feedback-box");
+        feedbackBox.style.display = "block";
+        feedbackBox.innerHTML = `<strong>Отлично! (Ausgezeichnet!)</strong><br><small>Übersetzung: „${round.translation}“</small>`;
+        
+        document.getElementById("words-pool").style.display = "none";
+        const actionBtn = document.getElementById("action-button");
+        
+        if (currentRoundIndex < rounds.length - 1) {
+            actionBtn.textContent = "Nächster Satz";
+        } else {
+            actionBtn.textContent = "Quiz abschließen";
+        }
+        actionBtn.style.display = "block";
+    }
+
+    function handleActionClick() {
+        const actionBtn = document.getElementById('action-button');
+        const actionText = actionBtn.textContent;
+        
+        if (actionText === "Nächster Satz") {
+            currentRoundIndex++;
+            loadRound();
+        } else if (actionText === "Quiz abschließen") {
+            // Endbildschirm rendern
+            document.getElementById("progress").style.width = "100%";
+            document.getElementById("quiz-title").textContent = "Quiz beendet!";
+            document.getElementById("quiz-subtitle").textContent = "Ergebnis";
+            document.getElementById("instruction-text").textContent = "Du hast alle 5 Sätze fehlerfrei zusammengesetzt und die Struktur von пар verinnerlicht. Великолепно!";
+            document.getElementById("sentence-display").innerHTML = "";
+            document.getElementById("words-pool").innerHTML = "";
+            document.getElementById("feedback-box").style.display = "none";
+            
+            actionBtn.textContent = "Quiz neustarten";
+            actionBtn.style.display = "block";
+        } else if (actionText === "Quiz neustarten") {
+            // Kompletter Reset zurück zu Frage / Satz 1
+            currentRoundIndex = 0;
+            loadRound();
+        }
+    }
+
+    window.onload = loadRound;
+</script>
+
+</body>
+</html>
