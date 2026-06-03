@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Quiz: Interaktive Flashcards</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --primary-hover: #1a528d;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+            --success-hover: #2f855a;
+            --error-color: #e53e3e;
+            --error-hover: #c53030;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-right: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 20%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* 3D Flashcard Geometrie */
+        .flashcard-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .flashcard {
+            width: 100%;
+            aspect-ratio: 4 / 2.8;
+            min-height: 220px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        /* Vorderseite */
+        .card-front {
+            background-color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .card-front .category {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .card-front .phrase {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .hint-text {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        /* Rückseite */
+        .card-back {
+            background-color: #fdfdfd;
+            border-color: #cbd5e0;
+            transform: rotateY(180deg);
+        }
+
+        .card-back .translation {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2b6cb0;
+            margin-bottom: 10px;
+        }
+
+        .card-back .explanation {
+            font-size: 0.95rem;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        /* Buttons zur Selbsteinschätzung */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            flex-width: 50%;
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.15s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-success { background-color: var(--success-color); }
+        .btn-success:hover { background-color: var(--success-hover); }
+
+        .btn-error { background-color: var(--error-color); }
+        .btn-error:hover { background-color: var(--error-hover); }
+
+        /* Endbildschirm-Design */
+        .results-screen {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .score-box {
+            background-color: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+
+        .action-btn {
+            margin: 10px auto 0 auto;
+            padding: 12px 30px;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .card-front .phrase { font-size: 1.3rem; }
+            .card-back .translation { font-size: 1.1rem; }
+            .card-back .explanation { font-size: 0.85rem; }
+            .btn { font-size: 0.9rem; padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- Spielmodus-Inhalt -->
+    <div id="game-interface">
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <span id="progress-text">Karte 1 / 5</span>
+        </div>
+
+        <h1>Flashcard-Training</h1>
+        <div class="subtitle">Selbsteinschätzung</div>
+
+        <div class="flashcard-wrapper">
+            <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <!-- Vorderseite -->
+                <div class="card-face card-front">
+                    <div class="category" id="card-category">Kategorie</div>
+                    <div class="phrase" id="card-phrase">Russischer Begriff</div>
+                    <div class="hint-text">💡 Zum Umdrehen tippen</div>
+                </div>
+                <!-- Rückseite -->
+                <div class="card-face card-back">
+                    <div class="translation" id="card-translation">Deutsche Bedeutung</div>
+                    <div class="explanation" id="card-explanation">Zusatz-Erklärung</div>
+                    <div class="hint-text">💡 Erneut tippen für Vorderseite</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-error" onclick="handleSelfAssessment(false)">❌ Nicht gewusst</button>
+            <button class="btn btn-success" onclick="handleSelfAssessment(true)">👍 Gewusst</button>
+        </div>
+    </div>
+
+    <!-- Auswertungsmodus-Inhalt -->
+    <div id="results-interface" class="results-screen">
+        <h1>Ausgezeichnet!</h1>
+        <div class="subtitle">Training beendet</div>
+        <div class="score-box">
+            Du hast <strong id="correct-count" style="color:var(--success-color)">0</strong> von 5 Vokabeln auf Anhieb gewusst!
+        </div>
+        <p style="color: #718096; margin-bottom: 20px; font-size: 0.95rem;">Wiederhole die Flashcards so oft, bis du alle Begriffskarten sicher beherrschst.</p>
+        <button class="action-btn" onclick="restartQuiz()">Karten neu mischen</button>
+    </div>
+</div>
+
+<script>
+    const deck = [
+        {
+            category: "Alltagsbedeutung",
+            phrase: "пара (im Alltag)",
+            translation: "Ein Paar",
+            explanation: "Im ganz normalen Alltag bezeichnet das Wort ein klassisches Paar, wie z.B. ein Paar Schuhe oder zwei zusammengehörige Dinge."
+        },
+        {
+            category: "Universitätskontext",
+            phrase: "пара (an der Universität)",
+            translation: "Eine Lehrveranstaltung / Doppelstunde",
+            explanation: "Unter Studierenden steht der Begriff für eine Vorlesung oder ein Seminar. Das Wort leitet sich davon ab, dass eine Einheit aus zwei Schulstunden besteht."
+        },
+        {
+            category: "Zeitstruktur",
+            phrase: "Wie lange dauert eine «пара»?",
+            translation: "90 Minuten",
+            explanation: "Da es sich um eine Doppelstunde handelt, dauert eine universitäre Unterrichtseinheit in Russland genau 90 Minuten am Stück."
+        },
+        {
+            category: "Anwendungsbeispiel 1",
+            phrase: "«Завтра у меня не будет пар.»",
+            translation: "„Morgen habe ich keine Vorlesungen.“",
+            explanation: "Grammatischer Fakt: Das Wort wird hier verneint. Im studentischen Alltag bedeutet dieser Satz schlicht und ergreifend: Ich habe morgen frei!"
+        },
+        {
+            category: "Anwendungsbeispiel 2",
+            phrase: "«Сегодня у uns будет пять пар.»",
+            translation: "„Heute werden wir fünf Doppelstunden haben.“",
+            explanation: "Fünf Doppelstunden bedeuten umgerechnet 10 normale Schulstunden oder 7,5 Stunden reine Vorlesungszeit. Das wird ein sehr langer Unitag!"
+        }
+    ];
+
+    let currentCards = [];
+    let currentIndex = 0;
+    let correctAnswers = 0;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startQuiz() {
+        currentCards = shuffle([...deck]);
+        currentIndex = 0;
+        correctAnswers = 0;
+        
+        document.getElementById("game-interface").style.display = "block";
+        document.getElementById("results-interface").style.display = "none";
+        
+        loadCard();
+    }
+
+    function loadCard() {
+        const cardElement = document.getElementById("flashcard");
+        cardElement.classList.remove("flipped"); // Stelle sicher, dass die neue Karte mit der Vorderseite startet
+
+        // Animation abwarten vor Textwechsel, falls die Karte vorher umgedreht war
+        setTimeout(() => {
+            const currentCard = currentCards[currentIndex];
+            
+            document.getElementById("card-category").textContent = currentCard.category;
+            document.getElementById("card-phrase").textContent = currentCard.phrase;
+            document.getElementById("card-translation").textContent = currentCard.translation;
+            document.getElementById("card-explanation").textContent = currentCard.explanation;
+
+            // Progress-UI aktualisieren
+            const progressPercent = ((currentIndex + 1) / currentCards.length) * 100;
+            document.getElementById("progress-fill").style.width = `${progressPercent}%`;
+            document.getElementById("progress-text").textContent = `Karte ${currentIndex + 1} / ${currentCards.length}`;
+        }, cardElement.classList.contains("flipped") ? 150 : 0);
+    }
+
+    function flipCard() {
+        document.getElementById("flashcard").classList.toggle("flipped");
+    }
+
+    function handleSelfAssessment(wasKnown) {
+        if (wasKnown) {
+            correctAnswers++;
+        }
+
+        // Kurze Verzögerung für flüssigen Übergang zur nächsten Karte
+        currentIndex++;
+        if (currentIndex < currentCards.length) {
+            loadCard();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById("game-interface").style.display = "none";
+        document.getElementById("results-interface").style.display = "block";
+        document.getElementById("correct-count").textContent = correctAnswers;
+    }
+
+    function restartQuiz() {
+        startQuiz();
+    }
+
+    // Beim Laden der Seite direkt starten
+    window.onload = startQuiz;
+</script>
+
+</body>
+</html>
